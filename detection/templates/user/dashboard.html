@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Verified News Feed — TruthScan{% endblock %}
+
+{% block extra_css %}
+.feed-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.feed-header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.feed-header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* Search bar */
+.search-wrapper {
+    max-width: 580px;
+    margin: 0 auto 3rem auto;
+}
+
+.search-form {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.search-form .form-control {
+    border-color: var(--border-normal);
+}
+
+.search-form .form-control:focus {
+    border-color: var(--accent-scan);
+}
+
+.search-result-info {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.75rem;
+}
+
+.search-result-info a {
+    color: var(--accent-scan);
+    font-weight: 600;
+}
+
+/* Feed grid */
+.feed-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.5rem;
+}
+
+/* News card */
+.news-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition);
+}
+
+.news-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--border-hover);
+    box-shadow: var(--glow-scan);
+}
+
+.news-card-thumb {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.news-card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.news-card-badges {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.9rem;
+}
+
+.news-verified-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent-real);
+    border: 1px solid rgba(0,230,118,0.3);
+    background: rgba(0,230,118,0.07);
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-xs);
+}
+
+.news-card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-white);
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+}
+
+.news-card-title a:hover { color: var(--accent-scan); }
+
+.news-card-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 0.9rem;
+    font-family: var(--font-mono);
+}
+
+.news-card-excerpt {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+    margin-bottom: 1.25rem;
+}
+
+.news-card-footer {
+    margin-top: auto;
+}
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="feed-header">
+    <h1><i class="fa-solid fa-newspaper" style="color: var(--accent-scan);"></i> Verified News Feed</h1>
+    <p>All articles below have passed AI classification and admin verification.</p>
+</div>
+
+<!-- Search -->
+<div class="search-wrapper">
+    <form method="GET" action="{% url 'user_dashboard' %}" class="search-form" id="search-form">
+        <input type="text" name="q" class="form-control" id="search-input"
+               placeholder="Search verified articles..." value="{{ query }}" autofocus>
+        <button type="submit" class="btn btn-primary" id="btn-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+    </form>
+    {% if query %}
+        <p class="search-result-info">
+            Results for <strong>"{{ query }}"</strong> &mdash;
+            <a href="{% url 'user_dashboard' %}">Clear search</a>
+        </p>
+    {% endif %}
+</div>
+
+<!-- News Grid -->
+<div class="feed-grid">
+    {% if articles %}
+        {% for article in articles %}
+        <div class="news-card">
+            {% if article.image %}
+                <img src="{{ article.image.url }}" alt="{{ article.title }}" class="news-card-thumb">
+            {% else %}
+                <div style="height: 8px; background: var(--grad-scan); opacity: 0.5;"></div>
+            {% endif %}
+
+            <div class="news-card-body">
+                <div class="news-card-badges">
+                    <span class="news-verified-tag">
+                        <i class="fa-solid fa-circle-check"></i> Verified
+                    </span>
+                    {% if article.classification == 'REAL' %}
+                        <span class="class-badge class-real" style="font-size: 0.65rem; padding: 0.15rem 0.5rem;">
+                            <i class="fa-solid fa-circle-check"></i> REAL
+                        </span>
+                    {% elif article.classification == 'FAKE' %}
+                        <span class="class-badge class-fake" style="font-size: 0.65rem; padding: 0.15rem 0.5rem;">
+                            <i class="fa-solid fa-circle-xmark"></i> FAKE
+                        </span>
+                    {% endif %}
+                </div>
+
+                <h2 class="news-card-title">
+                    <a href="{% url 'article_detail' article.pk %}">{{ article.title }}</a>
+                </h2>
+
+                <div class="news-card-meta">
+                    <span><i class="fa-solid fa-user-pen"></i> {{ article.author.username }}</span>
+                    <span><i class="fa-regular fa-calendar"></i> {{ article.created_at|date:"M d, Y" }}</span>
+                </div>
+
+                <p class="news-card-excerpt">{{ article.content }}</p>
+
+                <div class="news-card-footer">
+                    <a href="{% url 'article_detail' article.pk %}" class="btn btn-secondary"
+                       id="btn-read-{{ article.pk }}"
+                       style="width: 100%; justify-content: center;">
+                        Read Full Article <i class="fa-solid fa-arrow-right" style="margin-left: 0.3rem;"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="card empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-state-icon"><i class="fa-solid fa-satellite-dish"></i></div>
+            <h3>No Verified Articles Found</h3>
+            <p>
+                {% if query %}
+                    No verified articles match your search query.
+                {% else %}
+                    The public news feed is empty. Articles will appear once editors submit and admins verify them.
+                {% endif %}
+            </p>
+            {% if query %}
+                <a href="{% url 'user_dashboard' %}" class="btn btn-secondary" style="margin-top: 1rem;">
+                    <i class="fa-solid fa-rotate-left"></i> View All Articles
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

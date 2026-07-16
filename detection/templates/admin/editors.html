@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Editors — TruthScan{% endblock %}
+
+{% block extra_css %}
+.page-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.page-title { font-size: 1.9rem; font-weight: 800; }
+.page-subtitle { color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.3rem; }
+
+.table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.user-meta { display: flex; flex-direction: column; }
+.user-name { font-weight: 600; color: var(--text-white); font-size: 0.92rem; }
+.user-email { font-size: 0.78rem; color: var(--text-secondary); font-family: var(--font-mono); }
+
+.actions-cell {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.editor-count-tag {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    padding: 0.25rem 0.65rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 50px;
+    color: var(--text-secondary);
+}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-toolbar">
+    <div>
+        <h1 class="page-title">
+            <i class="fa-solid fa-user-gear" style="color: var(--accent-scan); font-size: 1.6rem; vertical-align: middle;"></i>
+            News Editors
+        </h1>
+        <p class="page-subtitle">Manage editor credentials and platform access for article drafting staff.</p>
+    </div>
+    <a href="{% url 'add_editor' %}" class="btn btn-primary" id="btn-add-editor">
+        <i class="fa-solid fa-plus"></i> Add Editor
+    </a>
+</div>
+
+<div class="table-card">
+    {% if editors %}
+        <table class="data-table" id="editors-table">
+            <thead>
+                <tr>
+                    <th>Editor Account</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for editor in editors %}
+                <tr>
+                    <td>
+                        <div class="user-cell">
+                            <div class="avatar">{{ editor.username|slice:":1"|upper }}</div>
+                            <div class="user-meta">
+                                <span class="user-name">{{ editor.username }}</span>
+                                <span class="user-email">{{ editor.email }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="role-tag role-editor">
+                            <i class="fa-solid fa-pen-nib" style="font-size: 0.55rem;"></i> Editor
+                        </span>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary); font-family: var(--font-mono);">
+                            {{ editor.date_joined|date:"M d, Y" }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions-cell">
+                            <a href="{% url 'edit_editor' editor.pk %}"
+                               class="btn btn-secondary btn-sm"
+                               id="btn-edit-editor-{{ editor.pk }}">
+                                <i class="fa-solid fa-pen"></i> Edit
+                            </a>
+                            <a href="{% url 'delete_editor' editor.pk %}"
+                               class="btn btn-danger btn-sm"
+                               id="btn-delete-editor-{{ editor.pk }}"
+                               onclick="return confirm('Delete editor account: {{ editor.username }}? This cannot be undone.');">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-users-slash"></i></div>
+            <h3>No Editors Found</h3>
+            <p>There are no editor accounts registered. Add the first one to start drafting articles.</p>
+            <a href="{% url 'add_editor' %}" class="btn btn-primary" id="btn-first-editor">
+                <i class="fa-solid fa-plus"></i> Add First Editor
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

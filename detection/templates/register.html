@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account — TruthScan{% endblock %}
+
+{% block extra_css %}
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 3rem 1rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 460px;
+    animation: fadeUp 0.5s var(--ease);
+}
+
+.auth-banner {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.auth-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-md);
+    background: rgba(124, 77, 255, 0.1);
+    border: 1px solid rgba(124, 77, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+    color: #b388ff;
+    margin: 0 auto 1.25rem auto;
+    box-shadow: var(--glow-purple);
+    animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.auth-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.4rem;
+}
+
+.auth-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 480px) {
+    .form-row { grid-template-columns: 1fr; }
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+}
+.auth-switch a { color: var(--accent-scan); font-weight: 600; }
+.auth-switch a:hover { text-decoration: underline; }
+
+.card.auth-card {
+    position: relative;
+    overflow: hidden;
+}
+.card.auth-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(135deg, #7c4dff, #b388ff);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.access-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    background: rgba(0,212,255,0.05);
+    border: 1px solid rgba(0,212,255,0.15);
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+.access-note i { color: var(--accent-scan); margin-top: 0.1rem; flex-shrink: 0; }
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="card auth-card">
+
+        <div class="auth-banner">
+            <div class="auth-icon-wrap">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h1 class="auth-title">Create Account</h1>
+            <p class="auth-subtitle">Join TruthScan and access verified news</p>
+        </div>
+
+        <div class="access-note">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Registering creates a <strong>Reader</strong> account. Editor access is granted by Admins only.</span>
+        </div>
+
+        <form method="POST" action="{% url 'register' %}" id="register-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="username" class="form-label">
+                    <i class="fa-solid fa-at" style="color: var(--accent-scan); margin-right: 0.3rem;"></i>Username
+                </label>
+                <input type="text" name="username" id="username"
+                    class="form-control" placeholder="Choose a username"
+                    required autofocus autocomplete="username">
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    <i class="fa-regular fa-envelope" style="color: var(--accent-scan); margin-right: 0.3rem;"></i>Email Address
+                </label>
+                <input type="email" name="email" id="email"
+                    class="form-control" placeholder="you@example.com"
+                    required autocomplete="email">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <i class="fa-solid fa-lock" style="color: var(--accent-scan); margin-right: 0.3rem;"></i>Password
+                    </label>
+                    <input type="password" name="password" id="password"
+                        class="form-control" placeholder="••••••••"
+                        required autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password" class="form-label">
+                        <i class="fa-solid fa-lock-open" style="color: var(--accent-scan); margin-right: 0.3rem;"></i>Confirm
+                    </label>
+                    <input type="password" name="confirm_password" id="confirm_password"
+                        class="form-control" placeholder="••••••••"
+                        required autocomplete="new-password">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="btn-create-account"
+                style="width:100%; padding: 0.8rem; font-size: 0.95rem; border-radius: var(--radius-md); background: linear-gradient(135deg, #7c4dff, #b388ff); color: #fff;">
+                <i class="fa-solid fa-user-plus"></i> Create My Account
+            </button>
+        </form>
+
+        <div class="auth-divider">or</div>
+
+        <div class="auth-switch">
+            Already have an account?
+            <a href="{% url 'login' %}" id="link-to-login">Sign In</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

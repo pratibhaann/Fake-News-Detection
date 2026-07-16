@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ article.title }} — TruthScan{% endblock %}
+
+{% block extra_css %}
+.reader-wrapper {
+    max-width: 820px;
+    margin: 0 auto;
+    animation: fadeUp 0.5s var(--ease);
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+.back-link:hover {
+    color: var(--text-white);
+    border-color: var(--border-hover);
+    background: rgba(0,212,255,0.05);
+    transform: translateX(-3px);
+}
+
+/* Article card */
+.article-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+/* Top scan-line stripe */
+.article-card-stripe {
+    height: 3px;
+    background: var(--grad-scan);
+}
+
+.article-card-inner { padding: 2.5rem; }
+
+/* Header */
+.article-header { margin-bottom: 1.5rem; }
+
+.article-title {
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 800;
+    line-height: 1.25;
+    color: var(--text-white);
+    margin-bottom: 1.25rem;
+}
+
+.article-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 1.5rem;
+}
+
+.article-meta-left {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.meta-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+}
+
+/* Cover image */
+.cover-image {
+    width: 100%;
+    max-height: 460px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 2rem;
+}
+
+/* AI Verdict Banner */
+.verdict-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 2rem;
+    border: 1px solid;
+}
+
+.verdict-real-banner {
+    background: rgba(0,230,118,0.06);
+    border-color: rgba(0,230,118,0.25);
+}
+
+.verdict-fake-banner {
+    background: rgba(255,82,82,0.06);
+    border-color: rgba(255,82,82,0.25);
+}
+
+.verdict-info {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.verdict-icon {
+    font-size: 1.75rem;
+}
+.verdict-real-banner .verdict-icon { color: var(--accent-real); }
+.verdict-fake-banner .verdict-icon { color: var(--accent-fake); }
+
+.verdict-text-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-white);
+}
+
+.verdict-text-sub {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-top: 0.15rem;
+}
+
+/* Body text */
+.article-body {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: #c8d4e8;
+    white-space: pre-line;
+}
+{% endblock %}
+
+{% block content %}
+<div class="reader-wrapper">
+
+    <!-- Back navigation -->
+    <a href="{% url 'user_dashboard' %}" class="back-link" id="link-back-feed">
+        <i class="fa-solid fa-arrow-left-long"></i> Back to News Feed
+    </a>
+
+    <div class="article-card">
+        <!-- Scan stripe at top -->
+        <div class="article-card-stripe"></div>
+
+        <div class="article-card-inner">
+
+            <!-- Article Header -->
+            <div class="article-header">
+                <h1 class="article-title">{{ article.title }}</h1>
+
+                <div class="article-meta-row">
+                    <div class="article-meta-left">
+                        <span class="meta-tag">
+                            <i class="fa-solid fa-user-pen"></i>
+                            Reporter: <strong style="color: var(--text-primary);">{{ article.author.username }}</strong>
+                        </span>
+                        <span class="meta-tag">
+                            <i class="fa-regular fa-calendar"></i>
+                            {{ article.created_at|date:"M d, Y" }}
+                        </span>
+                    </div>
+                    <span class="status-badge status-verified">
+                        <i class="fa-solid fa-circle-check"></i> Verified Public
+                    </span>
+                </div>
+            </div>
+
+            <!-- Cover Image -->
+            {% if article.image %}
+                <img src="{{ article.image.url }}" alt="{{ article.title }}" class="cover-image">
+            {% endif %}
+
+            <!-- AI Verdict Banner -->
+            <div class="verdict-banner {% if article.classification == 'REAL' %}verdict-real-banner{% else %}verdict-fake-banner{% endif %}">
+                <div class="verdict-info">
+                    <div class="verdict-icon">
+                        {% if article.classification == 'REAL' %}
+                            <i class="fa-solid fa-circle-check"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="verdict-text-label">TruthScan AI Credibility Audit</div>
+                        <div class="verdict-text-sub">Evaluated via TF-IDF tokenization and Passive Aggressive Classifier on title &amp; body patterns.</div>
+                    </div>
+                </div>
+
+                <div>
+                    {% if article.classification == 'REAL' %}
+                        <span class="class-badge class-real">
+                            <i class="fa-solid fa-satellite-dish"></i> Verdict: REAL
+                        </span>
+                    {% else %}
+                        <span class="class-badge class-fake">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Verdict: FAKE
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Article Body -->
+            <div class="article-body">{{ article.content }}</div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

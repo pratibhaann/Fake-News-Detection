@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Article — TruthScan{% endblock %}
+
+{% block extra_css %}
+.form-page {
+    max-width: 820px;
+    margin: 2rem auto;
+    animation: fadeUp 0.4s var(--ease);
+}
+
+.form-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.form-card-header-icon {
+    width: 50px; height: 50px;
+    border-radius: var(--radius-sm);
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.2);
+    color: var(--accent-scan);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.form-card-header h1 { font-size: 1.6rem; font-weight: 800; }
+.form-card-header p  { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem; }
+
+textarea.form-control { min-height: 200px; }
+
+/* AI Notice box */
+.ai-notice {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+    padding: 1rem 1.25rem;
+    background: rgba(0,212,255,0.05);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: var(--radius-sm);
+    font-size: 0.83rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+.ai-notice i { color: var(--accent-scan); margin-top: 0.1rem; flex-shrink: 0; font-size: 1rem; }
+
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.card.form-page {
+    position: relative;
+    overflow: hidden;
+}
+.card.form-page::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--grad-scan);
+}
+
+/* File input styling */
+.file-input-wrap {
+    position: relative;
+}
+.file-input-wrap input[type="file"] {
+    padding: 0.65rem 1rem;
+    cursor: pointer;
+}
+.file-input-wrap input[type="file"]::-webkit-file-upload-button {
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.25);
+    color: var(--accent-scan);
+    padding: 0.3rem 0.85rem;
+    border-radius: var(--radius-xs);
+    font-family: var(--font-main);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 0.75rem;
+    transition: var(--transition-fast);
+}
+.file-input-wrap input[type="file"]::-webkit-file-upload-button:hover {
+    background: rgba(0,212,255,0.18);
+}
+
+.current-image {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: var(--bg-inset);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+}
+.current-image img {
+    max-height: 80px;
+    border-radius: var(--radius-xs);
+    object-fit: cover;
+}
+.current-image span { font-size: 0.8rem; color: var(--text-secondary); font-family: var(--font-mono); }
+{% endblock %}
+
+{% block content %}
+<div class="card form-page">
+
+    <div class="form-card-header">
+        <div class="form-card-header-icon">
+            <i class="fa-solid {% if action == 'Add' %}fa-file-circle-plus{% else %}fa-file-pen{% endif %}"></i>
+        </div>
+        <div>
+            <h1>{{ action }} News Article</h1>
+            <p>
+                {% if action == 'Add' %}
+                    Draft your article. Save as draft or submit directly for AI classification.
+                {% else %}
+                    Edit your article. Verified articles cannot be modified.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- AI Classification Notice -->
+    <div class="ai-notice">
+        <i class="fa-solid fa-robot"></i>
+        <div>
+            <strong style="color: var(--text-white);">How AI Classification Works</strong><br>
+            When you choose <em>"Submit for Verification"</em>, TruthScan's Passive Aggressive Classifier will immediately analyze your article's title and content using TF-IDF vectorization and return a <strong>REAL</strong> or <strong>FAKE</strong> verdict. The article is then queued for admin review.
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="article-form">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="title" class="form-label">Article Headline / Title</label>
+            <input type="text" name="title" id="title" class="form-control"
+                   value="{% if article %}{{ article.title }}{% endif %}"
+                   placeholder="Enter a clear, factual headline..." required autofocus>
+        </div>
+
+        <div class="form-group">
+            <label for="content" class="form-label">Article Body Content</label>
+            <textarea name="content" id="content" class="form-control"
+                      placeholder="Write your full news story here. Be detailed and factual — the AI evaluates linguistic patterns."
+                      required>{% if article %}{{ article.content }}{% endif %}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="image" class="form-label">Cover Image <span style="color: var(--text-muted); font-weight:400;">(optional)</span></label>
+            {% if article and article.image %}
+                <div class="current-image">
+                    <img src="{{ article.image.url }}" alt="Current image">
+                    <span>Current: {{ article.image.name }}</span>
+                </div>
+            {% endif %}
+            <div class="file-input-wrap">
+                <input type="file" name="image" id="image" class="form-control" accept="image/*">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="status" class="form-label">Submission Option</label>
+            <select name="status" id="status" class="form-control">
+                <option value="draft" {% if article and article.status == 'draft' %}selected{% endif %}>
+                    💾 Save as Draft — Keep private, no AI analysis yet
+                </option>
+                <option value="pending" {% if article and article.status == 'pending' %}selected{% endif %}>
+                    🤖 Submit for AI Verification — Run classifier & alert admin
+                </option>
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'editor_dashboard' %}" class="btn btn-secondary" id="btn-cancel-article">
+                <i class="fa-solid fa-xmark"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary" id="btn-save-article">
+                <i class="fa-solid fa-satellite-dish"></i>
+                {% if action == 'Add' %}Save Article{% else %}Update Article{% endif %}
+            </button>
+        </div>
+    </form>
+
+</div>
+{% endblock %}

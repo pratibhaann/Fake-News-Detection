@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Article Moderation — TruthScan{% endblock %}
+
+{% block extra_css %}
+.page-header {
+    margin-bottom: 2.5rem;
+}
+.page-title { font-size: 1.9rem; font-weight: 800; }
+.page-subtitle { color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.3rem; }
+
+/* Article cards list */
+.articles-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.article-mod-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.article-mod-card:hover {
+    border-color: var(--border-normal);
+}
+
+/* Left accent stripe based on ML verdict */
+.article-mod-card.verdict-real { border-left: 3px solid rgba(0,230,118,0.5); }
+.article-mod-card.verdict-fake { border-left: 3px solid rgba(255,82,82,0.5); }
+.article-mod-card.verdict-pending { border-left: 3px solid rgba(255,145,0,0.4); }
+
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+.badges-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.article-title-mod {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-white);
+    margin-bottom: 0.6rem;
+    line-height: 1.4;
+}
+
+.article-excerpt {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.article-thumb {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 1.25rem;
+}
+
+/* Moderation control bar */
+.mod-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1.2rem;
+    background: var(--bg-inset);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.mod-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.mod-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fa-solid fa-magnifying-glass-chart" style="color: var(--accent-scan);"></i>
+        Article Moderation Center
+    </h1>
+    <p class="page-subtitle">Review ML predictions, inspect content, and approve or reject articles for publication.</p>
+</div>
+
+<div class="articles-feed">
+    {% if articles %}
+        {% for article in articles %}
+            <div class="article-mod-card {% if article.classification == 'REAL' %}verdict-real{% elif article.classification == 'FAKE' %}verdict-fake{% else %}verdict-pending{% endif %}">
+
+                <!-- Top Row: Meta + Badges -->
+                <div class="card-top">
+                    <div>
+                        <h2 class="article-title-mod">{{ article.title }}</h2>
+                        <div class="card-meta">
+                            <span class="meta-chip">
+                                <i class="fa-solid fa-user-pen"></i>
+                                <strong style="color: var(--text-primary);">{{ article.author.username }}</strong>
+                            </span>
+                            <span class="meta-chip">
+                                <i class="fa-regular fa-clock"></i>
+                                {{ article.created_at|date:"M d, Y · H:i" }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="badges-row">
+                        {% if article.classification == 'REAL' %}
+                            <span class="class-badge class-real">
+                                <i class="fa-solid fa-circle-check"></i> ML: REAL
+                            </span>
+                        {% elif article.classification == 'FAKE' %}
+                            <span class="class-badge class-fake">
+                                <i class="fa-solid fa-circle-xmark"></i> ML: FAKE
+                            </span>
+                        {% else %}
+                            <span class="class-badge class-pending">
+                                <i class="fa-solid fa-spinner fa-spin"></i> ML: PENDING
+                            </span>
+                        {% endif %}
+                        <span class="status-badge status-{{ article.status }}">{{ article.get_status_display }}</span>
+                    </div>
+                </div>
+
+                {% if article.image %}
+                    <img src="{{ article.image.url }}" alt="{{ article.title }}" class="article-thumb">
+                {% endif %}
+
+                <p class="article-excerpt">{{ article.content }}</p>
+
+                <!-- Moderation Bar -->
+                <div class="mod-bar">
+                    <span class="mod-label"><i class="fa-solid fa-gavel"></i> Moderation Decision</span>
+                    <div class="mod-actions">
+                        <form method="POST" style="display: contents;">
+                            {% csrf_token %}
+                            <input type="hidden" name="article_id" value="{{ article.id }}">
+
+                            {% if article.status != 'verified' %}
+                                <button type="submit" name="status" value="verified"
+                                    class="btn btn-success btn-sm"
+                                    id="btn-verify-{{ article.id }}">
+                                    <i class="fa-solid fa-check"></i> Approve & Verify
+                                </button>
+                            {% endif %}
+
+                            {% if article.status != 'rejected' %}
+                                <button type="submit" name="status" value="rejected"
+                                    class="btn btn-danger btn-sm"
+                                    id="btn-reject-{{ article.id }}">
+                                    <i class="fa-solid fa-ban"></i> Reject
+                                </button>
+                            {% endif %}
+
+                            {% if article.status != 'pending' and article.status != 'draft' %}
+                                <button type="submit" name="status" value="pending"
+                                    class="btn btn-secondary btn-sm"
+                                    id="btn-pending-{{ article.id }}">
+                                    <i class="fa-solid fa-rotate-left"></i> Reset to Pending
+                                </button>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+
+        {% endfor %}
+    {% else %}
+        <div class="card empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-folder-open"></i></div>
+            <h3>No Articles to Moderate</h3>
+            <p>There are no articles submitted by editors yet. Check back after editors submit their drafts.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

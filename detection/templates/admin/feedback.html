@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}User Feedback — TruthScan{% endblock %}
+
+{% block extra_css %}
+.page-header { margin-bottom: 2.5rem; }
+.page-title { font-size: 1.9rem; font-weight: 800; }
+.page-subtitle { color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.3rem; }
+
+.feedback-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
+}
+
+.feedback-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: var(--transition);
+}
+
+.feedback-card:hover {
+    border-color: var(--border-normal);
+    transform: translateY(-3px);
+}
+
+.fb-sender {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.fb-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(124,77,255,0.15);
+    border: 1px solid rgba(124,77,255,0.3);
+    color: #b388ff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    font-family: var(--font-heading);
+}
+
+.fb-sender-info { flex: 1; }
+.fb-username { font-size: 0.9rem; font-weight: 700; color: var(--text-white); }
+.fb-email    { font-size: 0.73rem; color: var(--text-muted); font-family: var(--font-mono); }
+
+.fb-subject {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-white);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.fb-message {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--text-secondary);
+    white-space: pre-line;
+    flex: 1;
+}
+
+.fb-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.fb-time {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fa-solid fa-inbox" style="color: var(--accent-scan);"></i>
+        Feedback Inbox
+    </h1>
+    <p class="page-subtitle">Messages, suggestions, and bug reports submitted by registered readers.</p>
+</div>
+
+<div class="feedback-grid">
+    {% if feedbacks %}
+        {% for fb in feedbacks %}
+        <div class="feedback-card">
+            <!-- Sender -->
+            <div class="fb-sender">
+                <div class="fb-avatar">{{ fb.user.username|slice:":1"|upper }}</div>
+                <div class="fb-sender-info">
+                    <div class="fb-username">{{ fb.user.username }}</div>
+                    <div class="fb-email">{{ fb.user.email }}</div>
+                </div>
+                <span class="role-tag role-user" style="font-size: 0.62rem;">Reader</span>
+            </div>
+
+            <!-- Subject -->
+            <div class="fb-subject">
+                <i class="fa-solid fa-message" style="color: var(--accent-scan); margin-right: 0.4rem; font-size: 0.8rem;"></i>
+                {{ fb.subject }}
+            </div>
+
+            <!-- Message Body -->
+            <p class="fb-message">{{ fb.message }}</p>
+
+            <!-- Footer -->
+            <div class="fb-footer">
+                <span class="fb-time">
+                    <i class="fa-regular fa-clock"></i>
+                    {{ fb.created_at|date:"M d, Y · H:i" }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="card empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-state-icon"><i class="fa-solid fa-comment-slash"></i></div>
+            <h3>Feedback Inbox is Empty</h3>
+            <p>No feedback submissions have been received from users yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

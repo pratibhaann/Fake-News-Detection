@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard — TruthScan{% endblock %}
+
+{% block extra_css %}
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.page-title { font-size: 2rem; font-weight: 800; }
+.page-subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.3rem; }
+
+.live-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--accent-real);
+    border: 1px solid rgba(0,230,118,0.3);
+    background: rgba(0,230,118,0.07);
+    padding: 0.35rem 0.85rem;
+    border-radius: 50px;
+}
+.live-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent-real);
+    animation: blink 1.2s infinite;
+}
+
+/* Stats grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-hover);
+    box-shadow: var(--glow-scan);
+}
+
+.stat-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+}
+
+.stat-card-icon {
+    width: 42px; height: 42px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    border: 1px solid;
+}
+
+.icon-editors  { background: rgba(0,188,212,0.1); border-color: rgba(0,188,212,0.25); color: var(--accent-teal); }
+.icon-users    { background: rgba(124,77,255,0.1); border-color: rgba(124,77,255,0.25); color: #b388ff; }
+.icon-articles { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.25); color: var(--accent-scan); }
+.icon-real     { background: rgba(0,230,118,0.1); border-color: rgba(0,230,118,0.25); color: var(--accent-real); }
+.icon-fake     { background: rgba(255,23,68,0.1);  border-color: rgba(255,23,68,0.25);  color: var(--accent-fake); }
+.icon-feedback { background: rgba(255,145,0,0.1);  border-color: rgba(255,145,0,0.25);  color: var(--accent-warn); }
+
+.stat-card-change {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+
+.stat-card-value {
+    font-family: var(--font-heading);
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--text-white);
+    line-height: 1;
+    margin-bottom: 0.4rem;
+}
+
+.stat-card-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Glow line at bottom of each card */
+.stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    opacity: 0;
+    transition: var(--transition);
+}
+.stat-card:hover::after { opacity: 1; }
+.stat-card.editors-card::after { background: var(--grad-scan); }
+.stat-card.users-card::after   { background: linear-gradient(135deg, #7c4dff, #b388ff); }
+.stat-card.articles-card::after { background: var(--grad-scan); }
+.stat-card.real-card::after    { background: var(--grad-real); }
+.stat-card.fake-card::after    { background: var(--grad-fake); }
+.stat-card.feedback-card::after { background: var(--grad-warn); }
+
+/* Quick Actions */
+.section-head {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.78rem;
+}
+.section-head i { color: var(--accent-scan); }
+
+.action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+}
+
+.action-card {
+    display: flex;
+    gap: 1.1rem;
+    align-items: flex-start;
+    padding: 1.4rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.action-card:hover {
+    border-color: var(--border-hover);
+    background: rgba(0,212,255,0.04);
+    transform: translateY(-3px);
+    box-shadow: var(--glow-scan);
+}
+
+.action-icon {
+    width: 46px; height: 46px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    border: 1px solid;
+    flex-shrink: 0;
+}
+
+.action-info { flex: 1; }
+.action-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; }
+.action-desc  { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem; }
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><i class="fa-solid fa-gauge-high" style="color:var(--accent-scan);"></i> Admin Control Center</h1>
+        <p class="page-subtitle">Manage editors, moderate articles, and monitor platform analytics.</p>
+    </div>
+    <span class="live-badge"><span class="live-dot"></span> System Online</span>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card editors-card">
+        <div class="stat-card-top">
+            <div class="stat-card-icon icon-editors"><i class="fa-solid fa-user-tie"></i></div>
+            <span class="stat-card-change">ACTIVE</span>
+        </div>
+        <div class="stat-card-value">{{ editors_count }}</div>
+        <div class="stat-card-label">News Editors</div>
+    </div>
+
+    <div class="stat-card users-card">
+        <div class="stat-card-top">
+            <div class="stat-card-icon icon-users"><i class="fa-solid fa-users"></i></div>
+            <span class="stat-card-change">REGISTERED</span>
+        </div>
+        <div class="stat-card-value">{{ users_count }}</div>
+        <div class="stat-card-label">Regular Users</div>
+    </div>
+
+    <div class="stat-card articles-card">
+        <div class="stat-card-top">
+            <div class="stat-card-icon icon-articles"><i class="fa-solid fa-newspaper"></i></div>
+            <span class="stat-card-change">TOTAL</span>
+        </div>
+        <div class="stat-card-value">{{ total_articles }}</div>
+        <div class="stat-card-label">Articles in System</div>
+    </div>
+
+    <div class="stat-card real-card">
+        <div class="stat-card-top">
+            <div class="stat-card-icon icon-real"><i class="fa-solid fa-circle-check"></i></div>
+            <span class="stat-card-change">ML VERDICT</span>
+        </div>
+        <div class="stat-card-value" style="color: var(--accent-real);">{{ real_articles }}</div>
+        <div class="stat-card-label">Classified REAL</div>
+    </div>
+
+    <div class="stat-card fake-card">
+        <div class="stat-card-top">
+            <div class="stat-card-icon icon-fake"><i class="fa-solid fa-circle-xmark"></i></div>
+            <span class="stat-card-change">ML VERDICT</span>
+        </div>
+        <div class="stat-card-value" style="color: var(--accent-fake);">{{ fake_articles }}</div>
+        <div class="stat-card-label">Classified FAKE</div>
+    </div>
+
+    <div class="stat-card feedback-card">
+        <div class="stat-card-top">
+            <div class="stat-card-icon icon-feedback"><i class="fa-solid fa-inbox"></i></div>
+            <span class="stat-card-change">INBOX</span>
+        </div>
+        <div class="stat-card-value" style="color: var(--accent-warn);">{{ feedback_count }}</div>
+        <div class="stat-card-label">User Feedback</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="section-head"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
+
+<div class="action-grid">
+    <a href="{% url 'manage_editors' %}" class="action-card" id="action-editors">
+        <div class="action-icon icon-editors"><i class="fa-solid fa-user-gear"></i></div>
+        <div class="action-info">
+            <div class="action-title">Manage Editors</div>
+            <div class="action-desc">Add, edit, or remove news editor accounts authorized to draft articles.</div>
+            <span class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-right"></i> Open</span>
+        </div>
+    </a>
+
+    <a href="{% url 'monitor_articles' %}" class="action-card" id="action-moderate">
+        <div class="action-icon icon-articles"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+        <div class="action-info">
+            <div class="action-title">Article Moderation</div>
+            <div class="action-desc">Review ML predictions and approve or reject submitted articles for publication.</div>
+            <span class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-right"></i> Open</span>
+        </div>
+    </a>
+
+    <a href="{% url 'view_reports' %}" class="action-card" id="action-reports">
+        <div class="action-icon icon-users"><i class="fa-solid fa-chart-pie"></i></div>
+        <div class="action-info">
+            <div class="action-title">Analytics & Reports</div>
+            <div class="action-desc">View classification metrics, moderation pipeline stats, and editor leaderboard.</div>
+            <span class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-right"></i> Open</span>
+        </div>
+    </a>
+
+    <a href="{% url 'view_feedback' %}" class="action-card" id="action-feedback">
+        <div class="action-icon icon-feedback"><i class="fa-solid fa-comments"></i></div>
+        <div class="action-info">
+            <div class="action-title">User Feedback Inbox</div>
+            <div class="action-desc">Read messages, bug reports, and feature suggestions submitted by readers.</div>
+            <span class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-right"></i> Open</span>
+        </div>
+    </a>
+</div>
+
+{% endblock %}

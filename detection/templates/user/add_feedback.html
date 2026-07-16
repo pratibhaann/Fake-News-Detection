@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Send Feedback — TruthScan{% endblock %}
+
+{% block extra_css %}
+.form-page {
+    max-width: 600px;
+    margin: 2rem auto;
+    animation: fadeUp 0.4s var(--ease);
+}
+
+.form-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.form-card-header-icon {
+    width: 50px; height: 50px;
+    border-radius: var(--radius-sm);
+    background: rgba(124,77,255,0.1);
+    border: 1px solid rgba(124,77,255,0.25);
+    color: #b388ff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.form-card-header h1 { font-size: 1.6rem; font-weight: 800; }
+.form-card-header p  { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem; }
+
+textarea.form-control { min-height: 160px; }
+
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.card.form-page {
+    position: relative;
+    overflow: hidden;
+}
+.card.form-page::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(135deg, #7c4dff, #b388ff);
+}
+{% endblock %}
+
+{% block content %}
+<div class="card form-page">
+
+    <div class="form-card-header">
+        <div class="form-card-header-icon">
+            <i class="fa-regular fa-paper-plane"></i>
+        </div>
+        <div>
+            <h1>Send Feedback</h1>
+            <p>Share suggestions, report issues, or leave comments — the admin team will read your message.</p>
+        </div>
+    </div>
+
+    <form method="POST" action="{% url 'add_feedback' %}" id="feedback-form">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="subject" class="form-label">
+                <i class="fa-solid fa-tag" style="color: #b388ff; margin-right: 0.3rem;"></i>Subject
+            </label>
+            <input type="text" name="subject" id="subject" class="form-control"
+                   placeholder="e.g. Feature request, Bug report, General comment"
+                   required autofocus>
+        </div>
+
+        <div class="form-group">
+            <label for="message" class="form-label">
+                <i class="fa-solid fa-comment-dots" style="color: #b388ff; margin-right: 0.3rem;"></i>Message
+            </label>
+            <textarea name="message" id="message" class="form-control"
+                      placeholder="Write your detailed feedback here..."
+                      required></textarea>
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'user_dashboard' %}" class="btn btn-secondary" id="btn-cancel-feedback">
+                <i class="fa-solid fa-xmark"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary" id="btn-submit-feedback"
+                    style="background: linear-gradient(135deg, #7c4dff, #b388ff); color: #fff;">
+                <i class="fa-regular fa-paper-plane"></i> Submit Feedback
+            </button>
+        </div>
+    </form>
+
+</div>
+{% endblock %}

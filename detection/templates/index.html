@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+
+{% block title %}TruthScan — AI-Powered Fake News Detection Platform{% endblock %}
+
+{% block extra_css %}
+
+/* ===== HERO ===== */
+.hero {
+    text-align: center;
+    padding: 6rem 1rem 4rem;
+    position: relative;
+    animation: fadeUp 0.8s var(--ease);
+}
+
+.hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-scan);
+    background: rgba(0, 212, 255, 0.08);
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    margin-bottom: 2rem;
+}
+
+.hero-eyebrow-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-scan);
+    animation: blink 1.5s infinite;
+}
+
+.hero-title {
+    font-size: clamp(2.8rem, 6vw, 5.5rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: var(--text-white);
+    margin-bottom: 1.75rem;
+}
+
+.hero-title .highlight {
+    background: var(--grad-hero);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtitle {
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    max-width: 640px;
+    margin: 0 auto 3rem auto;
+    line-height: 1.7;
+    font-weight: 400;
+}
+
+.hero-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 3.5rem;
+}
+
+.hero-actions .btn {
+    padding: 0.85rem 2rem;
+    font-size: 1rem;
+    border-radius: var(--radius-md);
+}
+
+/* Scan animation bar below hero */
+.scan-bar {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    height: 3px;
+    background: rgba(0,212,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+.scan-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -40%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, var(--accent-scan), transparent);
+    animation: scan-sweep 2s linear infinite;
+}
+@keyframes scan-sweep {
+    0%   { left: -40%; }
+    100% { left: 100%; }
+}
+
+/* ===== VERDICT PREVIEW BADGES ===== */
+.verdict-strip {
+    display: flex;
+    justify-content: center;
+    gap: 1.25rem;
+    margin: 3rem 0;
+    flex-wrap: wrap;
+}
+
+.verdict-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1.4rem;
+    border-radius: 50px;
+    border: 1px solid;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    transition: var(--transition);
+}
+.verdict-pill:hover { transform: translateY(-3px); }
+
+.verdict-real    { color: #00e676; border-color: rgba(0,230,118,0.4); background: rgba(0,230,118,0.08); }
+.verdict-fake    { color: #ff5252; border-color: rgba(255,82,82,0.4);  background: rgba(255,82,82,0.08); }
+.verdict-pending { color: #ff9100; border-color: rgba(255,145,0,0.4);  background: rgba(255,145,0,0.08); }
+
+/* ===== FEATURES GRID ===== */
+.section-label {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 3rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 5rem;
+}
+
+.feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(0,212,255,0.06) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.feature-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--border-hover);
+    box-shadow: var(--glow-scan);
+}
+
+.feature-card:nth-child(2):hover { border-color: rgba(124,77,255,0.4); box-shadow: var(--glow-purple); }
+.feature-card:nth-child(3):hover { border-color: rgba(0,230,118,0.4); box-shadow: var(--glow-real); }
+
+.feature-icon-wrap {
+    width: 54px;
+    height: 54px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid;
+    position: relative;
+    z-index: 1;
+}
+
+.fi-scan   { background: rgba(0,212,255,0.1);  border-color: rgba(0,212,255,0.25);  color: var(--accent-scan); }
+.fi-ai     { background: rgba(124,77,255,0.1); border-color: rgba(124,77,255,0.25); color: #b388ff; }
+.fi-shield { background: rgba(0,230,118,0.1);  border-color: rgba(0,230,118,0.25);  color: var(--accent-real); }
+
+.feature-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    position: relative;
+    z-index: 1;
+}
+
+.feature-desc {
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    line-height: 1.65;
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== STATS BAR ===== */
+.stats-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    padding: 3.5rem 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.stats-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 100%, rgba(0,212,255,0.07) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.stat-block { position: relative; z-index: 1; }
+
+.stat-number {
+    font-family: var(--font-heading);
+    font-size: 2.8rem;
+    font-weight: 800;
+    background: var(--grad-scan);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+}
+
+.stat-divider {
+    width: 1px;
+    background: var(--border-subtle);
+    align-self: stretch;
+    margin: 0 auto;
+    display: none;
+}
+
+{% endblock %}
+
+{% block content %}
+
+<!-- ===== HERO SECTION ===== -->
+<section class="hero">
+    <div class="hero-eyebrow">
+        <span class="hero-eyebrow-dot"></span>
+        AI-Powered Credibility Scanning — Live
+    </div>
+
+    <h1 class="hero-title">
+        Detect Fake News<br>
+        <span class="highlight">Before It Spreads</span>
+    </h1>
+
+    <p class="hero-subtitle">
+        TruthScan deploys Passive Aggressive Classifiers and TF-IDF Natural Language Vectorizers to analyze, score, and classify news articles as <strong>REAL</strong> or <strong>FAKE</strong> — in milliseconds.
+    </p>
+
+    <div class="hero-actions">
+        <a href="{% url 'register' %}" class="btn btn-primary" id="hero-cta-register">
+            <i class="fa-solid fa-bolt"></i> Start Scanning Free
+        </a>
+        <a href="{% url 'login' %}" class="btn btn-secondary" id="hero-cta-login">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In
+        </a>
+    </div>
+
+    <!-- Live Scan Bar -->
+    <div class="scan-bar"></div>
+</section>
+
+<!-- Verdict Badges Preview -->
+<div class="verdict-strip">
+    <span class="verdict-pill verdict-real"><i class="fa-solid fa-circle-check"></i> VERDICT: REAL</span>
+    <span class="verdict-pill verdict-fake"><i class="fa-solid fa-circle-xmark"></i> VERDICT: FAKE</span>
+    <span class="verdict-pill verdict-pending"><i class="fa-solid fa-hourglass-half"></i> SCANNING...</span>
+</div>
+
+<!-- ===== FEATURES ===== -->
+<div class="section-label">Core Capabilities</div>
+<h2 class="section-title">How TruthScan Works</h2>
+
+<div class="features-grid">
+    <div class="feature-card">
+        <div class="feature-icon-wrap fi-scan">
+            <i class="fa-solid fa-satellite-dish"></i>
+        </div>
+        <h3 class="feature-title">Instant AI Classification</h3>
+        <p class="feature-desc">
+            Combines title and article body into a unified TF-IDF feature vector, then runs a Passive Aggressive Classifier to return a <strong>REAL</strong> or <strong>FAKE</strong> verdict in under 50ms.
+        </p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon-wrap fi-ai">
+            <i class="fa-solid fa-robot"></i>
+        </div>
+        <h3 class="feature-title">Human-in-the-Loop Review</h3>
+        <p class="feature-desc">
+            News editors draft and submit articles. Administrators audit ML predictions before approving them to the public feed — a dual-layer verification pipeline.
+        </p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon-wrap fi-shield">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3 class="feature-title">Verified Public Feed</h3>
+        <p class="feature-desc">
+            Only articles that pass both AI scoring and admin moderation are published — giving users a trusted, credible news feed free from unverified content.
+        </p>
+    </div>
+</div>
+
+<!-- ===== STATS ===== -->
+<section class="stats-section">
+    <div class="stat-block">
+        <div class="stat-number">93.4%</div>
+        <div class="stat-label">Model Accuracy</div>
+    </div>
+    <div class="stat-block">
+        <div class="stat-number">&lt;50ms</div>
+        <div class="stat-label">Scan Speed</div>
+    </div>
+    <div class="stat-block">
+        <div class="stat-number">10k+</div>
+        <div class="stat-label">Articles Trained On</div>
+    </div>
+    <div class="stat-block">
+        <div class="stat-number">3</div>
+        <div class="stat-label">Role Tiers</div>
+    </div>
+</section>
+
+{% endblock %}

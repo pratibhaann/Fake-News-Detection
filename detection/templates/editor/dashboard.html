@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block title %}Editor Dashboard — TruthScan{% endblock %}
+
+{% block extra_css %}
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.page-title { font-size: 1.9rem; font-weight: 800; }
+.page-subtitle { color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.3rem; }
+
+/* Status stats bar */
+.editor-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+@media (max-width: 640px) {
+    .editor-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+.mini-stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    border-left: 3px solid;
+    transition: var(--transition);
+}
+.mini-stat:hover { transform: translateY(-3px); }
+
+.mini-stat-draft    { border-left-color: #546e7a; }
+.mini-stat-pending  { border-left-color: var(--accent-warn); }
+.mini-stat-verified { border-left-color: var(--accent-real); }
+.mini-stat-rejected { border-left-color: var(--accent-fake); }
+
+.mini-stat-value {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.mini-stat-draft    .mini-stat-value { color: #90a4ae; }
+.mini-stat-pending  .mini-stat-value { color: var(--accent-warn); }
+.mini-stat-verified .mini-stat-value { color: var(--accent-real); }
+.mini-stat-rejected .mini-stat-value { color: var(--accent-fake); }
+
+.mini-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Table */
+.table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.table-toolbar h2 {
+    font-size: 1rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.table-toolbar h2 i { color: var(--accent-scan); }
+
+.table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.article-title-cell { font-weight: 600; color: var(--text-white); font-size: 0.9rem; }
+.article-excerpt-cell {
+    font-size: 0.77rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-family: var(--font-mono);
+}
+
+.actions-cell { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fa-solid fa-pen-nib" style="color: var(--accent-scan);"></i>
+            Editor Workstation
+        </h1>
+        <p class="page-subtitle">Draft articles and submit them for AI classification and admin verification.</p>
+    </div>
+    <a href="{% url 'add_article' %}" class="btn btn-primary" id="btn-write-article">
+        <i class="fa-solid fa-plus"></i> Write New Article
+    </a>
+</div>
+
+<!-- Status Stats -->
+<div class="editor-stats">
+    <div class="mini-stat mini-stat-draft">
+        <div class="mini-stat-value">{{ draft_count }}</div>
+        <div class="mini-stat-label">Drafts</div>
+    </div>
+    <div class="mini-stat mini-stat-pending">
+        <div class="mini-stat-value">{{ pending_count }}</div>
+        <div class="mini-stat-label">Pending Review</div>
+    </div>
+    <div class="mini-stat mini-stat-verified">
+        <div class="mini-stat-value">{{ verified_count }}</div>
+        <div class="mini-stat-label">Published</div>
+    </div>
+    <div class="mini-stat mini-stat-rejected">
+        <div class="mini-stat-value">{{ rejected_count }}</div>
+        <div class="mini-stat-label">Rejected</div>
+    </div>
+</div>
+
+<!-- Articles Table -->
+<div class="table-toolbar">
+    <h2><i class="fa-solid fa-list"></i> Your Articles</h2>
+</div>
+
+<div class="table-card">
+    {% if articles %}
+        <table class="data-table" id="editor-articles-table">
+            <thead>
+                <tr>
+                    <th>Article</th>
+                    <th>AI Verdict</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in articles %}
+                <tr>
+                    <td>
+                        <div class="article-title-cell">{{ article.title }}</div>
+                        <div class="article-excerpt-cell">{{ article.content }}</div>
+                    </td>
+                    <td>
+                        {% if article.classification == 'REAL' %}
+                            <span class="class-badge class-real"><i class="fa-solid fa-circle-check"></i> REAL</span>
+                        {% elif article.classification == 'FAKE' %}
+                            <span class="class-badge class-fake"><i class="fa-solid fa-circle-xmark"></i> FAKE</span>
+                        {% else %}
+                            <span class="class-badge class-pending"><i class="fa-solid fa-clock"></i> —</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ article.status }}">{{ article.get_status_display }}</span>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary); font-family: var(--font-mono);">
+                            {{ article.created_at|date:"M d, Y" }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions-cell">
+                            {% if article.status == 'draft' or article.status == 'rejected' %}
+                                <a href="{% url 'submit_article' article.pk %}"
+                                   class="btn btn-success btn-sm"
+                                   id="btn-submit-{{ article.pk }}">
+                                    <i class="fa-solid fa-paper-plane"></i> Submit
+                                </a>
+                                <a href="{% url 'edit_article' article.pk %}"
+                                   class="btn btn-secondary btn-sm"
+                                   id="btn-edit-{{ article.pk }}">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
+                                <a href="{% url 'delete_article' article.pk %}"
+                                   class="btn btn-danger btn-sm"
+                                   id="btn-delete-{{ article.pk }}"
+                                   onclick="return confirm('Delete article: {{ article.title }}?');">
+                                    <i class="fa-solid fa-trash"></i>
+                                </a>
+                            {% elif article.status == 'pending' %}
+                                <span class="status-badge status-pending" style="font-size: 0.65rem;">
+                                    <i class="fa-solid fa-hourglass-half"></i> Awaiting Review
+                                </span>
+                                <a href="{% url 'delete_article' article.pk %}"
+                                   class="btn btn-danger btn-sm"
+                                   id="btn-delete-pending-{{ article.pk }}"
+                                   onclick="return confirm('Withdraw and delete this pending article?');">
+                                    <i class="fa-solid fa-trash"></i>
+                                </a>
+                            {% else %}
+                                <span style="color: var(--accent-real); font-size: 0.78rem; font-family: var(--font-mono);">
+                                    <i class="fa-solid fa-circle-check"></i> Published
+                                </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-pen-fancy"></i></div>
+            <h3>No Articles Yet</h3>
+            <p>Start drafting your first news article. Submit it for AI classification and admin review.</p>
+            <a href="{% url 'add_article' %}" class="btn btn-primary" id="btn-first-article">
+                <i class="fa-solid fa-pen-nib"></i> Write First Article
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

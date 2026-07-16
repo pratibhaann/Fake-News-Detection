@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block title %}Platform Reports — TruthScan{% endblock %}
+
+{% block extra_css %}
+.page-header { margin-bottom: 2.5rem; }
+.page-title { font-size: 1.9rem; font-weight: 800; }
+.page-subtitle { color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.3rem; }
+
+.reports-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .reports-layout { grid-template-columns: 1fr; }
+}
+
+.report-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+}
+
+.report-section-title {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.report-section-title i { color: var(--accent-scan); }
+
+/* Progress bars */
+.metric-row {
+    margin-bottom: 1.5rem;
+}
+
+.metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
+    font-size: 0.88rem;
+}
+
+.metric-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+}
+
+.metric-count {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.progress-track {
+    height: 8px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+.fill-real    { background: var(--grad-real);  box-shadow: 0 0 10px rgba(0,230,118,0.3); }
+.fill-fake    { background: var(--grad-fake);  box-shadow: 0 0 10px rgba(255,23,68,0.3); }
+.fill-pending { background: var(--grad-warn); }
+
+/* Pipeline status list */
+.pipeline-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.9rem 1.1rem;
+    background: var(--bg-inset);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.75rem;
+    transition: var(--transition);
+}
+
+.pipeline-item:hover { border-color: var(--border-normal); }
+.pipeline-item:last-child { margin-bottom: 0; }
+
+.pipeline-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+    font-weight: 500;
+}
+
+.pipeline-count {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: 800;
+}
+
+/* Leaderboard */
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.lb-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    background: var(--bg-inset);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+.lb-item:hover { border-color: var(--border-normal); }
+
+.lb-rank {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    flex-shrink: 0;
+    background: var(--border-subtle);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+}
+
+.lb-item:nth-child(1) .lb-rank { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; border-color: transparent; }
+.lb-item:nth-child(2) .lb-rank { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; border-color: transparent; }
+.lb-item:nth-child(3) .lb-rank { background: linear-gradient(135deg, #b45309, #92400e); color: #fff; border-color: transparent; }
+
+.lb-info { flex: 1; }
+.lb-name  { font-size: 0.9rem; font-weight: 600; color: var(--text-white); }
+.lb-email { font-size: 0.74rem; color: var(--text-muted); font-family: var(--font-mono); }
+
+.lb-count {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent-scan);
+}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fa-solid fa-chart-line" style="color: var(--accent-scan);"></i>
+        Analytics & Reports
+    </h1>
+    <p class="page-subtitle">Real-time metrics covering AI classification, moderation pipeline, and editor contributions.</p>
+</div>
+
+<div class="reports-layout">
+    <!-- Left Column -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+        <!-- ML Classifier Metrics -->
+        <div class="report-card">
+            <div class="report-section-title">
+                <i class="fa-solid fa-brain"></i> Machine Learning Classifier Breakdown
+            </div>
+
+            {% with total_class=fake_count|add:real_count|add:pending_count %}
+                {% if total_class > 0 %}
+                    <div class="metric-row">
+                        <div class="metric-header">
+                            <span class="metric-label">
+                                <i class="fa-solid fa-circle-check" style="color: var(--accent-real);"></i>
+                                Real News (Predicted)
+                            </span>
+                            <span class="metric-count">{{ real_count }} articles</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill fill-real" style="width: {% widthratio real_count total_class 100 %}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-row">
+                        <div class="metric-header">
+                            <span class="metric-label">
+                                <i class="fa-solid fa-circle-xmark" style="color: var(--accent-fake);"></i>
+                                Fake News (Predicted)
+                            </span>
+                            <span class="metric-count">{{ fake_count }} articles</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill fill-fake" style="width: {% widthratio fake_count total_class 100 %}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-row" style="margin-bottom: 0;">
+                        <div class="metric-header">
+                            <span class="metric-label">
+                                <i class="fa-solid fa-hourglass-half" style="color: var(--accent-warn);"></i>
+                                Awaiting Classifier
+                            </span>
+                            <span class="metric-count">{{ pending_count }} articles</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill fill-pending" style="width: {% widthratio pending_count total_class 100 %}%"></div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div style="text-align:center; padding: 2rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-satellite-dish" style="font-size: 2rem; margin-bottom: 0.75rem; display: block;"></i>
+                        No classifier data recorded yet.
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <!-- Moderation Pipeline -->
+        <div class="report-card">
+            <div class="report-section-title">
+                <i class="fa-solid fa-list-check"></i> Moderation Pipeline Status
+            </div>
+
+            <div class="pipeline-item">
+                <span class="pipeline-label">
+                    <i class="fa-solid fa-circle-check" style="color: var(--accent-real);"></i>
+                    Verified — Live on Public Feed
+                </span>
+                <span class="pipeline-count" style="color: var(--accent-real);">{{ verified_count }}</span>
+            </div>
+
+            <div class="pipeline-item">
+                <span class="pipeline-label">
+                    <i class="fa-solid fa-clock" style="color: var(--accent-warn);"></i>
+                    Pending Admin Review
+                </span>
+                <span class="pipeline-count" style="color: var(--accent-warn);">{{ pending_verif_count }}</span>
+            </div>
+
+            <div class="pipeline-item">
+                <span class="pipeline-label">
+                    <i class="fa-solid fa-file-pen" style="color: var(--text-secondary);"></i>
+                    Draft (Editor Working)
+                </span>
+                <span class="pipeline-count" style="color: var(--text-secondary);">{{ draft_count }}</span>
+            </div>
+
+            <div class="pipeline-item">
+                <span class="pipeline-label">
+                    <i class="fa-solid fa-ban" style="color: var(--accent-fake);"></i>
+                    Rejected (Blocked)
+                </span>
+                <span class="pipeline-count" style="color: var(--accent-fake);">{{ rejected_count }}</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column: Editor Leaderboard -->
+    <div>
+        <div class="report-card" style="height: 100%;">
+            <div class="report-section-title">
+                <i class="fa-solid fa-medal"></i> Editor Contributions
+            </div>
+
+            {% if editor_stats %}
+                <div class="leaderboard-list">
+                    {% for editor in editor_stats %}
+                    <div class="lb-item">
+                        <div class="lb-rank">{{ forloop.counter }}</div>
+                        <div class="lb-info">
+                            <div class="lb-name">{{ editor.username }}</div>
+                            <div class="lb-email">{{ editor.email }}</div>
+                        </div>
+                        <div class="lb-count">{{ editor.article_count }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+                    <i class="fa-solid fa-user-slash" style="font-size: 2rem; margin-bottom: 0.75rem; display: block;"></i>
+                    No editors registered yet.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
